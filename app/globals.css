@@ -16,14 +16,6 @@
   --shadow-card: 0 6px 20px rgba(2, 6, 23, 0.06);
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1e293b;
-    --card: #2a2f3a;
-    --card-foreground: #f9fafb;
-  }
-}
 
 /* Bind CSS variables into Tailwind theme */
 @theme inline {
