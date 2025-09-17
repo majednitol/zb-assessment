@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import useFetch from '../../hooks/useFetch'
 import { POSTS } from '../../lib/api'
 import type { Post } from '../../types'
@@ -9,17 +9,46 @@ import ErrorBanner from '../components/ErrorBanner'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
-export default function PostsPage(){
-  const [url, setUrl] = useState(POSTS)
-  const { data, loading, error } = useFetch<Post[]>(url)
+export default function PostsPage() {
+  const { data, loading, error } = useFetch<Post[]>(POSTS)
+  const [visibleCount, setVisibleCount] = useState(12)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const loaderRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!loaderRef.current || !data) return
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && visibleCount < data.length && !isLoadingMore) {
+            setIsLoadingMore(true)
+            setTimeout(() => {
+              setVisibleCount(prev => Math.min(prev + 12, data.length))
+              setIsLoadingMore(false)
+            }, 500)
+          }
+        })
+      },
+      { root: null, rootMargin: '0px', threshold: 1.0 }
+    )
+
+    observer.observe(loaderRef.current)
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current)
+    }
+  }, [data, visibleCount, isLoadingMore])
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Posts</h2>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 bg-primary text-white rounded-md" onClick={() => setUrl(POSTS)}>Reload</button>
-          <button className="px-3 py-1 bg-red-500 text-white rounded-md" onClick={() => setUrl('/invalid-posts')}>Simulate Error</button>
+          <button
+            className="px-3 py-1 bg-primary text-white rounded-md"
+            onClick={() => setVisibleCount(12)}
+          >
+            Reload
+          </button>
         </div>
       </div>
 
@@ -31,10 +60,10 @@ export default function PostsPage(){
           <motion.div
             initial="hidden"
             animate="show"
-            variants={{ show: { transition: { staggerChildren: 0.06 }}}}
+            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
             className="contents"
           >
-            {data.slice(0, 18).map(post => (
+            {data.slice(0, visibleCount).map(post => (
               <motion.div key={post.id} className="contents" whileHover={{ y: -4 }}>
                 <Link href={`/posts/${post.id}`}>
                   <Card className="cursor-pointer h-full" title={post.title}>
@@ -46,6 +75,12 @@ export default function PostsPage(){
           </motion.div>
         )}
       </div>
+
+      {/* Loader trigger */}
+      <div ref={loaderRef} className="h-6" />
+
+      {/* Loader for smooth delay */}
+      {isLoadingMore && <div className="text-center py-4"><Spinner /></div>}
     </div>
   )
 }
