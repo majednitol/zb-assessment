@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -12,14 +12,22 @@ const menu = [
 
 export default function Sidebar() {
   const isMobile = useIsMobile()
-  const [open, setOpen] = useState(!isMobile)
+  const [open, setOpen] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
-  // toggle sidebar
+  // Initialize sidebar state after we know if it's mobile
+  useEffect(() => {
+    setOpen(!isMobile)
+    setInitialized(true)
+  }, [isMobile])
+
   const toggleSidebar = () => setOpen(v => !v)
+
+  // Don't render anything until initialization done
+  if (!initialized) return null
 
   return (
     <>
-      
       {isMobile && open && (
         <div
           className="fixed inset-0 bg-black/40 z-30"
