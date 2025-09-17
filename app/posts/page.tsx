@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import useFetch from '../../hooks/useFetch'
 import { POSTS } from '../../lib/api'
 import type { Post } from '../../types'
@@ -10,41 +10,16 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useIsMobile } from '@/hooks/use-mobile'
 
-
 export default function PostsPage() {
-  const { data, loading, error } = useFetch<Post[]>(POSTS)
+  const [forceError, setForceError] = useState(false)
+
+  const endpoint = forceError ? '/invalid-posts' : POSTS
+  const { data, loading, error } = useFetch<Post[]>(endpoint)
+
   const isMobile = useIsMobile()
-  
-  // Number of posts per batch based on device
   const POSTS_BATCH = isMobile ? 6 : 12
 
   const [visibleCount, setVisibleCount] = useState(POSTS_BATCH)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const loaderRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (!loaderRef.current || !data) return
-
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && visibleCount < data.length && !isLoadingMore) {
-            setIsLoadingMore(true)
-            setTimeout(() => {
-              setVisibleCount(prev => Math.min(prev + POSTS_BATCH, data.length))
-              setIsLoadingMore(false)
-            }, 500) // 0.5s loader delay
-          }
-        })
-      },
-      { root: null, rootMargin: '0px', threshold: 1.0 }
-    )
-
-    observer.observe(loaderRef.current)
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current)
-    }
-  }, [data, visibleCount, isLoadingMore, POSTS_BATCH])
 
   return (
     <div>
@@ -57,14 +32,20 @@ export default function PostsPage() {
           >
             Reload
           </button>
+          <button
+            className="px-3 py-1 bg-red-500 text-white rounded-md"
+            onClick={() => setForceError(true)}
+          >
+            Simulate Error
+          </button>
         </div>
       </div>
 
       {loading && <Spinner />}
       {error && <ErrorBanner message={`Failed to load posts. ${error}`} />}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data && (
+      {!error && data && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <motion.div
             initial="hidden"
             animate="show"
@@ -75,20 +56,16 @@ export default function PostsPage() {
               <motion.div key={post.id} className="contents" whileHover={{ y: -4 }}>
                 <Link href={`/posts/${post.id}`}>
                   <Card className="cursor-pointer h-full" title={post.title}>
-                    <p className="text-sm text-gray-600">{post.body.slice(0, 120)}...</p>
+                    <p className="text-sm text-gray-600">
+                      {post.body.slice(0, 120)}...
+                    </p>
                   </Card>
                 </Link>
               </motion.div>
             ))}
           </motion.div>
-        )}
-      </div>
-
-      {/* Invisible div to trigger loading more */}
-      <div ref={loaderRef} className="h-6" />
-
-      {/* Loader for smooth delay */}
-      {isLoadingMore && <div className="text-center py-4"><Spinner /></div>}
+        </div>
+      )}
     </div>
   )
 }
