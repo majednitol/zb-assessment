@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 const menu = [
   { href: '/', label: 'Dashboard' },
@@ -10,64 +11,80 @@ const menu = [
 ]
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(true)
+  const isMobile = useIsMobile()
+  const [open, setOpen] = useState(isMobile)
+
+  // toggle sidebar
+  const toggleSidebar = () => setOpen(v => !v)
 
   return (
-    <aside className="bg-white border-r border-gray-100">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-md bg-primary text-white flex items-center justify-center font-bold">
-              Z
-            </div>
-            <AnimatePresence>
-              {open && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="font-semibold">Zettabyte</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          <button
-            aria-label="Toggle sidebar"
-            onClick={() => setOpen(v => !v)}
-            className="p-1"
+    <>
+      
+      {isMobile && open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      <AnimatePresence>
+        {open && (
+          <motion.aside
+            initial={{ x: isMobile ? -300 : 0 }}
+            animate={{ x: 0 }}
+            exit={{ x: isMobile ? -300 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className={`fixed z-40 top-0 left-0 h-full w-64 bg-white border-r border-gray-100 flex flex-col ${
+              isMobile ? 'shadow-lg' : 'relative'
+            }`}
           >
-            <motion.div
-              animate={{ rotate: open ? 0 : 180 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-              className="text-sm"
-            >
-              ⇋
-            </motion.div>
-          </button>
-        </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-md bg-primary text-white flex items-center justify-center font-bold">
+                  Z
+                </div>
+                <div className="font-semibold">Zettabyte</div>
+              </div>
+              {isMobile && (
+                <button aria-label="Close sidebar" onClick={toggleSidebar}>
+                  ✕
+                </button>
+              )}
+            </div>
 
-        {/* Menu */}
-        <nav className="px-2 py-4 flex-1">
-          {menu.map(item => (
-            <Link key={item.href} href={item.href} className="block">
-              <motion.div
-                whileHover={{ x: 6 }}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-secondary hover:bg-gray-50"
-              >
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span className="truncate">{item.label}</span>
-              </motion.div>
-            </Link>
-          ))}
-        </nav>
+            {/* Menu */}
+            <nav className="px-2 py-4 flex-1 space-y-1 overflow-y-auto">
+              {menu.map(item => (
+                <Link key={item.href} href={item.href}>
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-secondary hover:bg-gray-50 cursor-pointer"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="truncate">{item.label}</span>
+                  </motion.div>
+                </Link>
+              ))}
+            </nav>
 
-        {/* Footer */}
-        <div className="p-4 text-xs text-gray-500">
-          <div>© Zettabyte</div>
-        </div>
-      </div>
-    </aside>
+            {/* Footer */}
+            <div className="p-4 text-xs text-gray-500">
+              <div>© Zettabyte</div>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile toggle button */}
+      {isMobile && (
+        <button
+          className="fixed top-4 left-4 z-50 bg-primary text-white w-10 h-10 rounded-md flex items-center justify-center shadow-lg"
+          onClick={toggleSidebar}
+        >
+          ☰
+        </button>
+      )}
+    </>
   )
 }

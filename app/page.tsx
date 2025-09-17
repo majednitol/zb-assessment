@@ -17,8 +17,6 @@ export default function DashboardPage() {
   const isMobile = useIsMobile()
 
   const [chartColors, setChartColors] = useState<string[]>([])
-
-  // Get CSS variables after component mounts
   useEffect(() => {
     const getCssVar = (name: string) =>
       getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -42,7 +40,7 @@ export default function DashboardPage() {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: !isMobile, // smaller aspect ratio on mobile
+    maintainAspectRatio: !isMobile,
     plugins: {
       legend: {
         position: 'bottom' as const,
