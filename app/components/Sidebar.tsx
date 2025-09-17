@@ -12,7 +12,7 @@ const menu = [
 
 export default function Sidebar() {
   const isMobile = useIsMobile()
-  const [open, setOpen] = useState(isMobile)
+  const [open, setOpen] = useState(!isMobile)
 
   // toggle sidebar
   const toggleSidebar = () => setOpen(v => !v)
