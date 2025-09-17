@@ -14,8 +14,6 @@ export default function Sidebar() {
   const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const [initialized, setInitialized] = useState(false)
-
-  // Initialize sidebar state after we know if it's mobile
   useEffect(() => {
     setOpen(!isMobile)
     setInitialized(true)
@@ -23,7 +21,6 @@ export default function Sidebar() {
 
   const toggleSidebar = () => setOpen(v => !v)
 
-  // Don't render anything until initialization done
   if (!initialized) return null
 
   return (
