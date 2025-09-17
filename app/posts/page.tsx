@@ -10,11 +10,12 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useIsMobile } from '@/hooks/use-mobile'
 
-
 export default function PostsPage() {
-  const { data, loading, error } = useFetch<Post[]>(POSTS)
+  const [forceError, setForceError] = useState(false)
+  const endpoint = forceError ? '/invalid-posts' : POSTS
+  const { data, loading, error } = useFetch<Post[]>(endpoint)
   const isMobile = useIsMobile()
-  
+
   // Number of posts per batch based on device
   const POSTS_BATCH = isMobile ? 6 : 12
 
@@ -25,20 +26,17 @@ export default function PostsPage() {
   useEffect(() => {
     if (!loaderRef.current || !data) return
 
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && visibleCount < data.length && !isLoadingMore) {
-            setIsLoadingMore(true)
-            setTimeout(() => {
-              setVisibleCount(prev => Math.min(prev + POSTS_BATCH, data.length))
-              setIsLoadingMore(false)
-            }, 500) // 0.5s loader delay
-          }
-        })
-      },
-      { root: null, rootMargin: '0px', threshold: 1.0 }
-    )
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && visibleCount < data.length && !isLoadingMore) {
+          setIsLoadingMore(true)
+          setTimeout(() => {
+            setVisibleCount(prev => Math.min(prev + POSTS_BATCH, data.length))
+            setIsLoadingMore(false)
+          }, 500) // 0.5s loader delay
+        }
+      })
+    })
 
     observer.observe(loaderRef.current)
     return () => {
@@ -53,18 +51,28 @@ export default function PostsPage() {
         <div className="flex items-center gap-2">
           <button
             className="px-3 py-1 bg-primary text-white rounded-md"
-            onClick={() => setVisibleCount(POSTS_BATCH)}
+            onClick={() => {
+              setForceError(false) 
+              setVisibleCount(POSTS_BATCH) 
+            }}
           >
-            Reload
+            Reload Post
+          </button>
+          <button
+            className="px-3 py-1 bg-red-500 text-white rounded-md"
+            onClick={() => setForceError(true)}
+          >
+            Simulate Error
           </button>
         </div>
       </div>
 
       {loading && <Spinner />}
+
       {error && <ErrorBanner message={`Failed to load posts. ${error}`} />}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data && (
+      {!error && data && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <motion.div
             initial="hidden"
             animate="show"
@@ -81,13 +89,13 @@ export default function PostsPage() {
               </motion.div>
             ))}
           </motion.div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Invisible div to trigger loading more */}
-      <div ref={loaderRef} className="h-6" />
+      
+      {!error && <div ref={loaderRef} className="h-6" />}
 
-      {/* Loader for smooth delay */}
+      
       {isLoadingMore && <div className="text-center py-4"><Spinner /></div>}
     </div>
   )
