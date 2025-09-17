@@ -8,12 +8,20 @@ import Spinner from '../components/Spinner'
 import ErrorBanner from '../components/ErrorBanner'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useIsMobile } from '@/hooks/use-mobile'
+
 
 export default function PostsPage() {
   const { data, loading, error } = useFetch<Post[]>(POSTS)
-  const [visibleCount, setVisibleCount] = useState(12)
+  const isMobile = useIsMobile()
+  
+  // Number of posts per batch based on device
+  const POSTS_BATCH = isMobile ? 6 : 12
+
+  const [visibleCount, setVisibleCount] = useState(POSTS_BATCH)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const loaderRef = useRef<HTMLDivElement | null>(null)
+
   useEffect(() => {
     if (!loaderRef.current || !data) return
 
@@ -23,9 +31,9 @@ export default function PostsPage() {
           if (entry.isIntersecting && visibleCount < data.length && !isLoadingMore) {
             setIsLoadingMore(true)
             setTimeout(() => {
-              setVisibleCount(prev => Math.min(prev + 12, data.length))
+              setVisibleCount(prev => Math.min(prev + POSTS_BATCH, data.length))
               setIsLoadingMore(false)
-            }, 500)
+            }, 500) // 0.5s loader delay
           }
         })
       },
@@ -36,7 +44,7 @@ export default function PostsPage() {
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current)
     }
-  }, [data, visibleCount, isLoadingMore])
+  }, [data, visibleCount, isLoadingMore, POSTS_BATCH])
 
   return (
     <div>
@@ -45,7 +53,7 @@ export default function PostsPage() {
         <div className="flex items-center gap-2">
           <button
             className="px-3 py-1 bg-primary text-white rounded-md"
-            onClick={() => setVisibleCount(12)}
+            onClick={() => setVisibleCount(POSTS_BATCH)}
           >
             Reload
           </button>
@@ -76,7 +84,7 @@ export default function PostsPage() {
         )}
       </div>
 
-      {/* Loader trigger */}
+      {/* Invisible div to trigger loading more */}
       <div ref={loaderRef} className="h-6" />
 
       {/* Loader for smooth delay */}

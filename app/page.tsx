@@ -7,12 +7,14 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import useFetch from '../hooks/useFetch'
 import { POSTS, USERS } from '../lib/api'
 import type { Post, User } from '../types'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
 export default function DashboardPage() {
   const { data: posts } = useFetch<Post[]>(POSTS)
   const { data: users } = useFetch<User[]>(USERS)
+  const isMobile = useIsMobile()
 
   const [chartColors, setChartColors] = useState<string[]>([])
 
@@ -40,27 +42,28 @@ export default function DashboardPage() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: !isMobile, // smaller aspect ratio on mobile
     plugins: {
       legend: {
         position: 'bottom' as const,
         labels: {
           color: chartColors[1],
-          font: { size: 14 },
+          font: { size: isMobile ? 12 : 14 },
         },
       },
     },
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-4 md:px-0">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
         <div>
           <h1 className="text-2xl font-bold">Welcome to Zettabyte Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Analytics and management</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${isMobile ? 'sm:grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'} gap-4`}>
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -90,7 +93,7 @@ export default function DashboardPage() {
 
       <div className="mt-4">
         <Card title="Activity">
-          <div className="h-48 flex items-center justify-center">
+          <div className={`h-48 flex items-center justify-center ${isMobile ? 'p-2' : ''}`}>
             <Doughnut data={data} options={options} />
           </div>
         </Card>

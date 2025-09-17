@@ -7,10 +7,13 @@ import Spinner from '../components/Spinner'
 import ErrorBanner from '../components/ErrorBanner'
 import Modal from '../components/Modal'
 import { motion } from 'framer-motion'
+import { useIsMobile } from '@/hooks/use-mobile'
+
 
 export default function UsersPage(){
   const { data, loading, error } = useFetch<User[]>(USERS)
   const [selected, setSelected] = useState<User | null>(null)
+  const isMobile = useIsMobile()
 
   return (
     <div>
@@ -22,21 +25,30 @@ export default function UsersPage(){
       {error && <ErrorBanner message={`Failed to load users. ${error}`} />}
 
       {data && (
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto ${isMobile ? 'scrollbar-thin' : ''}`}>
           <table className="w-full bg-white card">
             <thead>
               <tr className="text-left text-sm text-gray-500">
                 <th className="p-3">Name</th>
                 <th className="p-3">Email</th>
-                <th className="p-3">Company</th>
+                {!isMobile && <th className="p-3">Company</th>}
+                <th className="p-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {data.map(user => (
-                <tr key={user.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelected(user)}>
+                <tr key={user.id} className="hover:bg-gray-50">
                   <td className="p-3">{user.name}</td>
                   <td className="p-3">{user.email}</td>
-                  <td className="p-3">{user.company?.name}</td>
+                  {!isMobile && <td className="p-3">{user.company?.name}</td>}
+                  <td className="p-3">
+                    <button
+                      className="text-blue-600 hover:underline text-sm"
+                      onClick={() => setSelected(user)}
+                    >
+                      View More
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -44,9 +56,14 @@ export default function UsersPage(){
         </div>
       )}
 
+      {/* Modal for full user details */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.name}>
         {selected && (
-          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="space-y-2">
               <div><strong>Email:</strong> {selected.email}</div>
               <div><strong>Phone:</strong> {selected.phone}</div>
