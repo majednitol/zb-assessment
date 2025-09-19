@@ -5,7 +5,7 @@ export default function Navbar(){
   return (
     <header className="w-full border-b border-gray-200 bg-white">
       <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-12">
           <div className="w-10 h-10 rounded-md flex items-center justify-center bg-primary text-white font-bold">ZB</div>
           <div>
             <div className="text-lg font-semibold text-secondary">Zettabyte</div>
